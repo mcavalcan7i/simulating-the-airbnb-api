@@ -37,25 +37,27 @@ class UserController extends Controller {
         $createUser = $this->user->create([
             "name" => $request->name,
             "email" => $request->email,
-            "password" => $request->password
+            "password" => bcrypt($request->password)
         ]);
-
-        if ($createUser) {
-            return response()->json($createUser, 200);
-        } else {
-            return response()->json(['msg_error' => $createUser]);
-        }
+        
+        return response()->json($createUser, 200);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Locacao  $locacao
+     * @param  Integer
      * @return \Illuminate\Http\Response
      */
-    public function show(Locacao $locacao)
-    {
-        //
+    public function show(int $id) {
+        $user = $this->user->find($id);
+
+        if ($user) {
+            return response()->json($user, 200);            
+        } else {
+            return response()->json(['msg_error' => "Não existe um usuário associado ao ID informado"]);
+        }
+
     }
 
     /**
@@ -68,18 +70,54 @@ class UserController extends Controller {
     public function update(Request $request, int $id) {
         
         $user = $this->user->find($id);
-        dd($user);
+        
+        if ($user == null) {
+            return response()->json(['msg_error' => "ID informado não está associado a nenhum usuário"]);
+        } else {
+
+            // Se o tipo de requisição for PATCH
+            if ($request->method() === 'PATCH') {
+                $regrasPatch = array();
+
+                // Percorrendo todas as regras definidas no Modelo Users
+                foreach($user->rules() as $input => $regra) {
+                    
+                    // Verificando se o input existe na requisição que foi enviada para o backend
+                    if (array_key_exists($input, $request->all())) { 
+                        // Se exisitir, adicionaremos as regras ao regrasPatch
+                        $regrasPatch[$input] = $regra;
+                    }
+                }
+
+                // Aplicando as regrasPatch
+                $request->validate($regrasPatch, $user->feedback());
+            
+            } else { // Se o tipo da requisição for PUT
+                $request->validate($user->rules(), $user->feedback());
+            }
+
+            $user->fill($request->all()); 
+            $user->save();
+            return response()->json($user, 200);
+        }
 
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Locacao  $locacao
+     * @param  Integer
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Locacao $locacao)
+    public function destroy(int $id)
     {
-        //
+        $user = $this->user->find($id);
+
+        if ($user) {
+            $user->delete();
+            return response()->json(['msg_success' => 'Usuário deletado com sucesso']);
+        } else {
+            return response()->json(['msg_error' => "ID informado não está associado a nenhum usuário"]);
+        }
     }
 }

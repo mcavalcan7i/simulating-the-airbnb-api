@@ -9,4 +9,20 @@ class Imovel extends Model
 {
     use HasFactory;
     protected $table = "imoveis";
+    protected $fillable = ['cidade', 'tipo_imovel', 'avaliacao', 'proprietario'];
+
+    public function rules() {
+        return [
+            'cidade' => 'required',
+            'tipo_imovel' => 'required',
+            'id_proprietario' => 'required'
+        ];
+    }
+
+
+    public function feedback () {
+        return [
+            'required' => "O campo :attribute é obrigatório"
+        ];
+    }
 }

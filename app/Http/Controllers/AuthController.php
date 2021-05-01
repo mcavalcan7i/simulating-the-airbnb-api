@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class AuthController extends Controller {
 
-    // Rota responsável logar o usuário no 'sistema'
+    // Metodo responsável logar o usuário no 'sistema'
     public function login(Request $request) {
         // Autenticação (email e senha)
         $credentials = $request->all(['email', 'password']);
@@ -24,16 +24,21 @@ class AuthController extends Controller {
         // Retornar um json web token
     }
 
+    // Metodo responsável por realizar logout do usuário no sistema
     public function logout() {
-        return "logout";
+        auth('api')->logout();
+        return response()->json(['msg' => "Logout realizado com sucesso"], 200);
     }
 
+    // Metodo responsável por realizar um refresh no token do usuário, de modo que sua autenticação não expire com o tempo
     public function refresh() {
-        return "refresh";
+        $token = auth('api')->refresh(); // Necessário o client esteja com um token válido
+        return response()->json(["novo_token" => $token], 200);
     }
 
+    // Metodo responsável por realizar o envio de informações a respeito do usuário
     public function me() {
-        return "me";
+        return response()->json(auth()->user());
     }
 
 }
